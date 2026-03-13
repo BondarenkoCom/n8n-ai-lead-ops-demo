@@ -12,6 +12,7 @@ services:
       N8N_PROTOCOL: http
       N8N_EDITOR_BASE_URL: ${WEBHOOK_BASE_URL}
       WEBHOOK_URL: ${WEBHOOK_BASE_URL}
+      MOCK_CRM_BASE_URL: http://mock-api:3001
       N8N_SECURE_COOKIE: "false"
       N8N_DIAGNOSTICS_ENABLED: "false"
       N8N_PERSONALIZATION_ENABLED: "false"
@@ -25,7 +26,7 @@ services:
   mock-api:
     build:
       context: .
-      dockerfile: mock-api/Dockerfile
+      dockerfile: dotnet-api/Dockerfile
     restart: unless-stopped
     ports:
       - "3001:3001"

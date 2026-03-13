@@ -3,3 +3,7 @@ dist/
 .env
 n8n/data/
 *.log
+dotnet-api/bin/
+dotnet-api/obj/
+dotnet-api/data/
+scripts/__pycache__/

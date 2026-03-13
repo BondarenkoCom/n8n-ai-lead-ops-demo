@@ -3,7 +3,7 @@
 > Sanitized client-style automation sample for AI-assisted lead intake, qualification, routing, CRM sync, notifications, approval gating, and audit logging.
 
 ![n8n](https://img.shields.io/badge/n8n-self--hosted-EF6D5B?style=flat-square)
-![TypeScript](https://img.shields.io/badge/TypeScript-Node%2020+-3178C6?style=flat-square)
+![.NET](https://img.shields.io/badge/.NET-8-512BD4?style=flat-square)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square)
 ![Mode](https://img.shields.io/badge/Integrations-mock--ready-1f6feb?style=flat-square)
 ![Portfolio](https://img.shields.io/badge/Portfolio-sanitized-success?style=flat-square)
@@ -30,9 +30,10 @@ The sample fits agencies, consultancies, clinics, service operators, and B2B tea
 ## What this demo includes
 
 - self-hosted `n8n` runtime via Docker Compose
-- TypeScript mock backend for CRM, approvals, LLM abstraction, notifications, and audit storage
+- ASP.NET Core minimal API for CRM, approvals, LLM abstraction, notifications, and audit storage
 - exported n8n workflow with intake, scoring, routing, logging, and approval callback handling
 - file-backed mock integrations so the demo still works without external credentials
+- TypeScript utility scripts for seeding, payload replay, and portfolio assets
 - realistic payloads and response snapshots for portfolio review and proposal reuse
 
 ## Architecture
@@ -63,9 +64,11 @@ Detailed flow notes are in [docs/architecture.md](docs/architecture.md).
 | Path | Purpose |
 | --- | --- |
 | `n8n/workflows/lead-intake-ops.workflow.json` | Main orchestration workflow export |
-| `mock-api/src/server.ts` | Mock CRM API and integration adapter service |
-| `src/` | Shared domain models, services, adapters, and utilities |
+| `dotnet-api/` | Active ASP.NET Core backend used by Docker Compose and local `.NET` runs |
+| `mock-api/` | Original TypeScript prototype retained as a reference implementation |
+| `src/` | Shared TypeScript utilities used by the simulator and legacy prototype |
 | `scripts/send-sample.ts` | Replay a sample payload into n8n |
+| `scripts/render_project_video.py` | Generate the portfolio-style project video asset |
 | `docs/sample-payloads/` | Realistic inbound scenario payloads |
 | `test-data/demo-responses/` | Demo-friendly response snapshots |
 | `data/` | File-backed storage for local demo runs |
@@ -76,10 +79,11 @@ Detailed flow notes are in [docs/architecture.md](docs/architecture.md).
 2. Keep `OPENAI_MODE=mock` if you want the demo to run without a live LLM provider.
 3. Run `npm install`.
 4. Run `npm run seed`.
-5. Run `docker compose up --build`.
-6. Open n8n at `http://localhost:5678`.
+5. Run `npm run start:dotnet-api` if you want the backend without Docker.
+6. Run `docker compose up --build` if you want the full local stack.
+7. Open n8n at `http://localhost:5678`.
 
-The mock backend will be available at `http://localhost:3001`.
+The `.NET` backend will be available at `http://localhost:3001`.
 
 ## Importing workflow into n8n
 
@@ -116,6 +120,8 @@ Useful extensions:
 - `APPROVAL_CALLBACK_URL`
 - `BUDGET_MIN_QUALIFIED`
 
+`docker-compose.yml` overrides the n8n container to call the backend through the internal alias `http://mock-api:3001`, while host-side scripts keep using `http://localhost:3001`.
+
 ## Example lead scenarios
 
 - `high-intent-b2b-website.json`: qualified B2B lead with budget, urgency, and clear purchase intent
@@ -141,6 +147,7 @@ This repository is a generalized reconstruction of a client-style workflow with 
 - live SaaS connectors are intentionally replaced with local adapters by default
 - the mock CRM is file-backed, not database-backed
 - approval handling is webhook-based rather than backed by a separate UI
+- the active backend is `.NET`, while the original TypeScript prototype is preserved for reference rather than used in the main runtime
 - no tenant isolation or auth layer is included because this sample is meant for local demonstration
 
 ## Extension ideas

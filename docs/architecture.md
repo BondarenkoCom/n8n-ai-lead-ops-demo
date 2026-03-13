@@ -27,7 +27,7 @@ The extraction step maps raw inbound data into a reusable lead schema:
 - `sentiment`
 - `intent`
 
-The mock backend exposes an OpenAI-compatible abstraction. When live credentials are absent or a live request fails, the system falls back to deterministic extraction heuristics.
+The ASP.NET Core backend exposes an OpenAI-compatible abstraction. When live credentials are absent or a live request fails, the system falls back to deterministic extraction heuristics.
 
 ## LLM scoring stage
 
@@ -61,7 +61,7 @@ Final routes:
 
 ## CRM sync
 
-The mock CRM API is file-backed and supports:
+The file-backed CRM API is implemented in the `.NET` service and supports:
 
 - `POST /leads/upsert`
 - `GET /leads`
@@ -102,14 +102,15 @@ The workflow contains an explicit approval branch before outbound follow-up and 
 The demo includes:
 
 - idempotency registration before downstream actions
-- structured error logging in the mock API
+- structured error logging in the `.NET` API
 - workflow-level failure logging path
 - deterministic fallback behavior when live LLM calls fail
 
 ## Local runtime components
 
 - `n8n`: orchestration engine and webhook entrypoints
-- `mock-api`: mock CRM, approval store, LLM adapter, Slack adapter, mail draft adapter, audit writer
+- `dotnet-api`: ASP.NET Core service for CRM, approval store, LLM adapter, Slack adapter, mail draft adapter, and audit writer
+- `mock-api`: original TypeScript prototype retained as a reference artifact
 - `data/`: file-backed demo storage
 - `docs/sample-payloads/`: replayable inbound scenarios
 - `test-data/demo-responses/`: expected outcome snapshots

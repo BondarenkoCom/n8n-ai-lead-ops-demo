@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
+    "start:dotnet-api": "dotnet run --project dotnet-api/N8nAiLeadOps.DemoApi.csproj",
     "dev:mock-api": "tsx watch mock-api/src/server.ts",
     "start:mock-api": "node dist/mock-api/src/server.js",
     "seed": "tsx scripts/seed-demo-data.ts",
