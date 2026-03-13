@@ -1,0 +1,52 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env
+    environment:
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_EDITOR_BASE_URL: ${WEBHOOK_BASE_URL}
+      WEBHOOK_URL: ${WEBHOOK_BASE_URL}
+      N8N_SECURE_COOKIE: "false"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      GENERIC_TIMEZONE: ${TZ}
+    volumes:
+      - ./n8n/data:/home/node/.n8n
+      - ./n8n/workflows:/files/workflows
+    depends_on:
+      - mock-api
+
+  mock-api:
+    build:
+      context: .
+      dockerfile: mock-api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT}
+      DATA_ROOT: /app/data
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      OPENAI_MODE: ${OPENAI_MODE}
+      MOCK_CRM_BASE_URL: http://localhost:3001
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+      SLACK_MODE: ${SLACK_MODE}
+      GMAIL_MODE: ${GMAIL_MODE}
+      AUDIT_MODE: ${AUDIT_MODE}
+      HUMAN_APPROVAL_MODE: ${HUMAN_APPROVAL_MODE}
+      APPROVAL_CALLBACK_URL: ${APPROVAL_CALLBACK_URL}
+      BUDGET_MIN_QUALIFIED: ${BUDGET_MIN_QUALIFIED}
+      TZ: ${TZ}
+    volumes:
+      - ./data:/app/data

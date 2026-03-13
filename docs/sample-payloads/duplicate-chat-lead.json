@@ -1,0 +1,14 @@
+{
+  "source_type": "chat_simulation",
+  "channel": "whatsapp-style",
+  "contact": {
+    "name": "Jordan Ellis",
+    "email": "jordan.ellis@northwind-demo.com",
+    "phone": "+1-312-555-0182",
+    "company": "Northwind Health Advisory",
+    "location": "Chicago, US"
+  },
+  "topic": "Lead qualification automation",
+  "message": "Following up on our automation request from last week. Need a quote and timeline for inbound lead triage, CRM sync, and Slack alerts.",
+  "urgency": "high"
+}

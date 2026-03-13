@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#eef6ff"/>
+  <rect x="50" y="50" width="1100" height="575" rx="24" fill="#ffffff" stroke="#1e293b" stroke-width="4"/>
+  <text x="80" y="110" fill="#1e293b" font-family="Georgia, serif" font-size="34">Lead routing placeholder</text>
+  <circle cx="220" cy="300" r="95" fill="#bbf7d0"/>
+  <circle cx="510" cy="300" r="95" fill="#fde68a"/>
+  <circle cx="800" cy="300" r="95" fill="#fecaca"/>
+  <circle cx="1030" cy="300" r="95" fill="#c7d2fe"/>
+  <text x="154" y="308" fill="#1e293b" font-family="Verdana, sans-serif" font-size="24">Hot lead</text>
+  <text x="444" y="308" fill="#1e293b" font-family="Verdana, sans-serif" font-size="24">Nurture</text>
+  <text x="724" y="308" fill="#1e293b" font-family="Verdana, sans-serif" font-size="24">Rejected</text>
+  <text x="945" y="308" fill="#1e293b" font-family="Verdana, sans-serif" font-size="24">Manual review</text>
+  <text x="80" y="560" fill="#475569" font-family="Verdana, sans-serif" font-size="22">Replace with an n8n branch visualization or execution detail screenshot.</text>
+</svg>

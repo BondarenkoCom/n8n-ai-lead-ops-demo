@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#f3efe6"/>
+  <rect x="40" y="40" width="1120" height="595" rx="24" fill="#fffdf8" stroke="#0f172a" stroke-width="4"/>
+  <text x="72" y="110" fill="#0f172a" font-family="Georgia, serif" font-size="36">Workflow overview placeholder</text>
+  <text x="72" y="160" fill="#475569" font-family="Verdana, sans-serif" font-size="22">Import the workflow in n8n and replace this asset with an execution canvas screenshot.</text>
+  <rect x="72" y="220" width="220" height="90" rx="18" fill="#dbeafe"/>
+  <rect x="360" y="220" width="220" height="90" rx="18" fill="#dcfce7"/>
+  <rect x="648" y="220" width="220" height="90" rx="18" fill="#fde68a"/>
+  <rect x="936" y="220" width="180" height="90" rx="18" fill="#fecaca"/>
+  <text x="112" y="275" fill="#0f172a" font-family="Verdana, sans-serif" font-size="24">Triggers</text>
+  <text x="408" y="275" fill="#0f172a" font-family="Verdana, sans-serif" font-size="24">LLM steps</text>
+  <text x="692" y="275" fill="#0f172a" font-family="Verdana, sans-serif" font-size="24">Routing</text>
+  <text x="980" y="275" fill="#0f172a" font-family="Verdana, sans-serif" font-size="24">Audit</text>
+  <path d="M292 265H360" stroke="#0f172a" stroke-width="4"/>
+  <path d="M580 265H648" stroke="#0f172a" stroke-width="4"/>
+  <path d="M868 265H936" stroke="#0f172a" stroke-width="4"/>
+</svg>

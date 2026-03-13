@@ -1,0 +1,13 @@
+{
+  "source_type": "email_inquiry",
+  "from": {
+    "name": "Taylor Brooks",
+    "email": "taylor@bluepeak-ops-demo.com"
+  },
+  "subject": "Possible ops engagement",
+  "body": "We are evaluating a few different process improvements across intake, support, and internal operations. Not fully sure whether we need AI, workflow automation, or just better reporting. Happy to talk if there is a fit.",
+  "metadata": {
+    "campaign": "referral",
+    "urgency": "medium"
+  }
+}

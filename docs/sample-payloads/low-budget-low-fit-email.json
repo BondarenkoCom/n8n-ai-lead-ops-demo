@@ -1,0 +1,14 @@
+{
+  "source_type": "email_inquiry",
+  "from": {
+    "name": "Mia Carter",
+    "email": "mia@smallstudio-demo.com"
+  },
+  "subject": "Simple automation request",
+  "body": "We run a very small local studio and mostly need a cheap fix for contact forms. Budget is around $500 and timing is flexible. We do not need CRM or sales routing yet.",
+  "metadata": {
+    "budget": 500,
+    "urgency": "low",
+    "campaign": "direct-email"
+  }
+}

@@ -1,0 +1,1087 @@
+{
+  "name": "Lead Intake Ops Demo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake-website",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Website Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1760,
+        -420
+      ],
+      "webhookId": "lead-intake-website"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map((item) => ({ json: { source: 'website_form', payload: item.json } }));"
+      },
+      "id": "2",
+      "name": "Tag Website Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1540,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake-email",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Email Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1760,
+        -220
+      ],
+      "webhookId": "lead-intake-email"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map((item) => ({ json: { source: 'email_inquiry', payload: item.json } }));"
+      },
+      "id": "4",
+      "name": "Tag Email Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1540,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake-chat",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "5",
+      "name": "Chat Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1760,
+        -20
+      ],
+      "webhookId": "lead-intake-chat"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map((item) => ({ json: { source: 'chat_simulation', payload: item.json } }));"
+      },
+      "id": "6",
+      "name": "Tag Chat Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1540,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/normalize`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': String($execution.id ?? Date.now()) }, body: JSON.stringify({ source: $json.source, payload: $json.payload }) });\nconst body = await response.json();\nreturn [{ json: { run_id: String($execution.id ?? Date.now()), lead: body.data, original_payload: $json.payload } }];"
+      },
+      "id": "7",
+      "name": "Normalize Lead Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $json.lead;\nconst rawKey = [lead.email ?? '', lead.phone ?? '', lead.company ?? '', lead.free_text_summary ?? ''].join('|').toLowerCase();\nreturn [{ json: { ...$json, submission_key: Buffer.from(rawKey).toString('base64url') } }];"
+      },
+      "id": "8",
+      "name": "Create Submission Key",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/idempotency/check`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ key: $json.submission_key, lead: $json.lead }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, idempotency: body.data } }];"
+      },
+      "id": "9",
+      "name": "Check Idempotency",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst query = new URLSearchParams();\nif ($json.lead.email) query.set('email', $json.lead.email);\nif ($json.lead.phone) query.set('phone', $json.lead.phone);\nconst suffix = query.toString() ? `?${query.toString()}` : '';\nconst response = await fetch(`${baseUrl}/leads${suffix}`, { headers: { 'x-run-id': $json.run_id } });\nconst body = await response.json();\nreturn [{ json: { ...$json, duplicate_matches: body.data ?? [] } }];"
+      },
+      "id": "10",
+      "name": "Lookup CRM Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/llm/extract`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead: $json.lead }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, extraction: body.data, extraction_meta: { mode: body.mode, fallback_used: body.fallback_used, provider: body.provider, error: body.error } } }];"
+      },
+      "id": "11",
+      "name": "Extract Lead Attributes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/llm/score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead: $json.lead, extraction: $json.extraction }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, scoring: body.data, scoring_meta: { mode: body.mode, fallback_used: body.fallback_used, provider: body.provider, error: body.error } } }];"
+      },
+      "id": "12",
+      "name": "Score Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/rules/evaluate`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead: $json.lead, extraction: $json.extraction, scoring: $json.scoring, duplicate_match_count: ($json.duplicate_matches ?? []).length, duplicate_submission: $json.idempotency?.duplicate_submission ?? false }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, evaluation: body.data } }];"
+      },
+      "id": "13",
+      "name": "Evaluate Business Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/leads/upsert`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead: $json.lead, extraction: $json.extraction, scoring: $json.scoring, evaluation: $json.evaluation }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, crm: body.data, lead_record: body.data.record } }];"
+      },
+      "id": "14",
+      "name": "Upsert CRM Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.lead_record.route}}",
+              "rightValue": "hot_lead_sales",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "15",
+      "name": "If Hot Lead Route?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nawait fetch(`${baseUrl}/internal/slack/notify`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead_id: $json.lead_record.id, kind: 'hot_lead_sales' }) });\nreturn items;"
+      },
+      "id": "16",
+      "name": "Notify Hot Lead Slack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.lead_record.route}}",
+              "rightValue": "manual_review",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "17",
+      "name": "If Manual Review Route?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nawait fetch(`${baseUrl}/internal/slack/notify`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead_id: $json.lead_record.id, kind: 'manual_review' }) });\nreturn items;"
+      },
+      "id": "18",
+      "name": "Notify Manual Review Slack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.evaluation.should_create_reply_draft}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "19",
+      "name": "Reply Draft Needed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1380,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.evaluation.requires_human_approval}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "20",
+      "name": "Human Approval Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/approvals/request`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead_id: $json.lead_record.id }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, approval: body.data } }];"
+      },
+      "id": "21",
+      "name": "Create Approval Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nawait fetch(`${baseUrl}/internal/slack/notify`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead_id: $json.lead_record.id, kind: 'approval_required' }) });\nreturn items;"
+      },
+      "id": "22",
+      "name": "Notify Approval Queue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst event = { event_id: `audit_${$json.run_id}_pending`, run_id: $json.run_id, event_type: 'approval_pending', timestamp: new Date().toISOString(), lead_id: $json.lead_record.id, route: $json.lead_record.route, status: 'awaiting_approval', details: { approval_id: $json.approval.approval_id, lead_score: $json.lead_record.lead_score } };\nawait fetch(`${baseUrl}/internal/audit/log`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify(event) });\nreturn items;"
+      },
+      "id": "23",
+      "name": "Audit Pending Approval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/email/draft`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead_id: $json.lead_record.id }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, email_draft: body.data } }];"
+      },
+      "id": "24",
+      "name": "Create Reply Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.evaluation.should_handoff_booking}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "25",
+      "name": "Booking Handoff Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2100,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst payload = { lead_id: $json.lead_record.id, requested_slot: null, route: $json.lead_record.route, owner: $json.lead_record.owner, notes: 'Auto-created booking handoff from workflow.' };\nconst response = await fetch(`${baseUrl}/booking/handoff`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify(payload) });\nconst body = await response.json();\nreturn [{ json: { ...$json, booking_handoff: body.data } }];"
+      },
+      "id": "26",
+      "name": "Create Booking Handoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst event = { event_id: `audit_${$json.run_id}_completed`, run_id: $json.run_id, event_type: 'lead_processed', timestamp: new Date().toISOString(), lead_id: $json.lead_record.id, route: $json.lead_record.route, status: 'completed', details: { lead_score: $json.lead_record.lead_score, approval_required: $json.evaluation.requires_human_approval, reply_draft_created: Boolean($json.email_draft), booking_handoff_created: Boolean($json.booking_handoff) } };\nawait fetch(`${baseUrl}/internal/audit/log`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify(event) });\nreturn items;"
+      },
+      "id": "27",
+      "name": "Audit Successful Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2580,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst event = { event_id: `audit_${$json.run_id}_closed`, run_id: $json.run_id, event_type: 'lead_closed', timestamp: new Date().toISOString(), lead_id: $json.lead_record.id, route: $json.lead_record.route, status: 'rejected_or_spam', details: { lead_score: $json.lead_record.lead_score, risk_flags: $json.evaluation.risk_flags } };\nawait fetch(`${baseUrl}/internal/audit/log`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify(event) });\nreturn items;"
+      },
+      "id": "28",
+      "name": "Audit Rejected Or Spam",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-approval-decision",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "29",
+      "name": "Approval Decision Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        360
+      ],
+      "webhookId": "lead-approval-decision"
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst approvalId = $json.approval_id ?? $json.approvalId;\nconst decision = $json.decision;\nconst response = await fetch(`${baseUrl}/internal/approvals/resolve`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': String($execution.id ?? Date.now()) }, body: JSON.stringify({ approval_id: approvalId, decision }) });\nconst body = await response.json();\nreturn [{ json: { run_id: String($execution.id ?? Date.now()), approval: body.data } }];"
+      },
+      "id": "30",
+      "name": "Resolve Approval Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.approval.status}}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "31",
+      "name": "Approval Accepted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/leads/${$json.approval.lead_id}`, { headers: { 'x-run-id': $json.run_id } });\nconst body = await response.json();\nreturn [{ json: { ...$json, lead_record: body.data } }];"
+      },
+      "id": "32",
+      "name": "Load Approved Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/internal/email/draft`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify({ lead_id: $json.lead_record.id, draft: $json.approval.email_draft }) });\nconst body = await response.json();\nreturn [{ json: { ...$json, email_draft: body.data } }];"
+      },
+      "id": "33",
+      "name": "Create Approved Reply Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.approval.booking_payload !== null}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "34",
+      "name": "Approved Booking Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst response = await fetch(`${baseUrl}/booking/handoff`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify($json.approval.booking_payload) });\nconst body = await response.json();\nreturn [{ json: { ...$json, booking_handoff: body.data } }];"
+      },
+      "id": "35",
+      "name": "Create Approved Booking Handoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst event = { event_id: `audit_${$json.run_id}_approval_completed`, run_id: $json.run_id, event_type: 'approval_completed', timestamp: new Date().toISOString(), lead_id: $json.lead_record.id, route: $json.lead_record.route, status: 'approved', details: { approval_id: $json.approval.approval_id, reply_draft_created: Boolean($json.email_draft), booking_handoff_created: Boolean($json.booking_handoff) } };\nawait fetch(`${baseUrl}/internal/audit/log`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify(event) });\nreturn items;"
+      },
+      "id": "36",
+      "name": "Audit Approved Execution",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst event = { event_id: `audit_${$json.run_id}_approval_rejected`, run_id: $json.run_id, event_type: 'approval_closed', timestamp: new Date().toISOString(), lead_id: $json.approval.lead_id, route: $json.approval.route, status: 'rejected', details: { approval_id: $json.approval.approval_id } };\nawait fetch(`${baseUrl}/internal/audit/log`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': $json.run_id }, body: JSON.stringify(event) });\nreturn items;"
+      },
+      "id": "37",
+      "name": "Audit Rejected Approval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        500
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "38",
+      "name": "Workflow Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = $env.MOCK_CRM_BASE_URL || 'http://mock-api:3001';\nconst payload = { error_id: `err_${String($execution.id ?? Date.now())}`, run_id: String($execution.id ?? Date.now()), timestamp: new Date().toISOString(), stage: 'workflow_failure', message: $json.error?.message ?? 'Workflow execution failed', details: $json };\nawait fetch(`${baseUrl}/internal/errors/log`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-run-id': payload.run_id }, body: JSON.stringify(payload) });\nreturn items;"
+      },
+      "id": "39",
+      "name": "Audit Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        620
+      ]
+    }
+  ],
+  "connections": {
+    "Website Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Tag Website Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Website Source": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Tag Email Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Email Source": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Tag Chat Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Chat Source": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead Payload": {
+      "main": [
+        [
+          {
+            "node": "Create Submission Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Submission Key": {
+      "main": [
+        [
+          {
+            "node": "Check Idempotency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Idempotency": {
+      "main": [
+        [
+          {
+            "node": "Lookup CRM Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup CRM Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Extract Lead Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lead Attributes": {
+      "main": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Business Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Business Rules": {
+      "main": [
+        [
+          {
+            "node": "Upsert CRM Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert CRM Lead": {
+      "main": [
+        [
+          {
+            "node": "If Hot Lead Route?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Hot Lead Route?": {
+      "main": [
+        [
+          {
+            "node": "Notify Hot Lead Slack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Manual Review Route?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Hot Lead Slack": {
+      "main": [
+        [
+          {
+            "node": "Reply Draft Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Manual Review Route?": {
+      "main": [
+        [
+          {
+            "node": "Notify Manual Review Slack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Draft Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Manual Review Slack": {
+      "main": [
+        [
+          {
+            "node": "Reply Draft Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply Draft Needed?": {
+      "main": [
+        [
+          {
+            "node": "Human Approval Required?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit Rejected Or Spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Approval Required?": {
+      "main": [
+        [
+          {
+            "node": "Create Approval Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Reply Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Approval Request": {
+      "main": [
+        [
+          {
+            "node": "Notify Approval Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Approval Queue": {
+      "main": [
+        [
+          {
+            "node": "Audit Pending Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Reply Draft": {
+      "main": [
+        [
+          {
+            "node": "Booking Handoff Required?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Handoff Required?": {
+      "main": [
+        [
+          {
+            "node": "Create Booking Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit Successful Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Booking Handoff": {
+      "main": [
+        [
+          {
+            "node": "Audit Successful Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Decision Webhook": {
+      "main": [
+        [
+          {
+            "node": "Resolve Approval Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Approval Decision": {
+      "main": [
+        [
+          {
+            "node": "Approval Accepted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Accepted?": {
+      "main": [
+        [
+          {
+            "node": "Load Approved Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit Rejected Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Approved Lead": {
+      "main": [
+        [
+          {
+            "node": "Create Approved Reply Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Approved Reply Draft": {
+      "main": [
+        [
+          {
+            "node": "Approved Booking Required?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved Booking Required?": {
+      "main": [
+        [
+          {
+            "node": "Create Approved Booking Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit Approved Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Approved Booking Handoff": {
+      "main": [
+        [
+          {
+            "node": "Audit Approved Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Audit Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9d5f6ec0-d15a-4384-97f4-portfolio-demo",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "lead-intake-ops-demo"
+}

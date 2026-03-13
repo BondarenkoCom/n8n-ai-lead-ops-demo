@@ -1,0 +1,13 @@
+{
+  "run_id": "run_demo_spam",
+  "lead_id": "lead_demo_spam_001",
+  "route": "rejected_or_spam",
+  "qualification_status": "rejected",
+  "lead_score": 5,
+  "duplicate_submission": false,
+  "approval_status": "not_required",
+  "crm_upserted": true,
+  "slack_notified": false,
+  "reply_draft_created": false,
+  "booking_handoff_created": false
+}

@@ -1,0 +1,13 @@
+{
+  "run_id": "run_demo_ambiguous",
+  "lead_id": "lead_demo_manual_001",
+  "route": "manual_review",
+  "qualification_status": "manual_review",
+  "lead_score": 54,
+  "duplicate_submission": false,
+  "approval_status": "pending",
+  "crm_upserted": true,
+  "slack_notified": true,
+  "reply_draft_created": false,
+  "booking_handoff_created": false
+}

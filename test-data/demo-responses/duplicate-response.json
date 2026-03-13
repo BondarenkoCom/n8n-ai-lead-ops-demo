@@ -1,0 +1,14 @@
+{
+  "run_id": "run_demo_duplicate",
+  "lead_id": "lead_seed_northwind",
+  "route": "manual_review",
+  "qualification_status": "duplicate",
+  "lead_score": 76,
+  "duplicate_submission": false,
+  "duplicate_match_count": 1,
+  "approval_status": "pending",
+  "crm_upserted": true,
+  "slack_notified": true,
+  "reply_draft_created": false,
+  "booking_handoff_created": false
+}

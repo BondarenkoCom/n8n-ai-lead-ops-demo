@@ -1,0 +1,13 @@
+{
+  "run_id": "run_demo_high_intent",
+  "lead_id": "lead_demo_acme_001",
+  "route": "hot_lead_sales",
+  "qualification_status": "qualified",
+  "lead_score": 88,
+  "duplicate_submission": false,
+  "approval_status": "pending",
+  "crm_upserted": true,
+  "slack_notified": true,
+  "reply_draft_created": false,
+  "booking_handoff_created": false
+}

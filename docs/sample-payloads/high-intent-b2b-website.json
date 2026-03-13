@@ -1,0 +1,12 @@
+{
+  "source_type": "website_form",
+  "name": "Avery Chen",
+  "company": "Acme Services Group",
+  "email": "avery.chen@acme-services-demo.com",
+  "phone": "+1-415-555-0142",
+  "service": "Lead qualification automation",
+  "budget": "18000",
+  "urgency": "high",
+  "location": "San Francisco, US",
+  "message": "We need to replace manual lead triage across our website forms and Gmail inquiries. Looking for AI-assisted qualification, CRM sync, Slack alerts, and booking handoff within the next 30 days."
+}

@@ -1,0 +1,13 @@
+{
+  "run_id": "run_demo_low_budget",
+  "lead_id": "lead_demo_lowfit_001",
+  "route": "nurture_queue",
+  "qualification_status": "nurture",
+  "lead_score": 29,
+  "duplicate_submission": false,
+  "approval_status": "not_required",
+  "crm_upserted": true,
+  "slack_notified": false,
+  "reply_draft_created": true,
+  "booking_handoff_created": false
+}
